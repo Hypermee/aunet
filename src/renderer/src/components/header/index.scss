@@ -1,0 +1,61 @@
+#top-header {
+  z-index: 1;
+  width: 720px;
+  display: flex;
+  position: fixed;
+  align-items: center;
+  justify-content: space-between;
+  background-color: transparent;
+  -webkit-app-region: drag;
+
+  .left {
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+
+    .title {
+      font-size: 13px;
+      font-weight: 400;
+      margin-left: 7px;
+      color: rgba(128, 128, 128, 1);
+    }
+
+    .favicon {
+      width: 24px;
+      height: 24px;
+      background: url("../../assets/favicon.png") 100%/24px 24px no-repeat;
+    }
+  }
+
+  .right {
+    display: flex;
+    align-items: center;
+
+    .icon-minus, .icon-close {
+      width: 48px;
+      height: 40px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-app-region: no-drag;
+    }
+
+    .icon-minus {
+
+      &:hover {
+        color: #666666;
+        background-color: rgb(250,250,250);
+      }
+    }
+
+    .icon-close {
+      border-radius: 0 10px 0 0;
+
+      &:hover {
+        color: #ffffff;
+        background-color: red;
+      }
+    }
+  }
+}

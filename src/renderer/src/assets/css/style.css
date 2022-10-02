@@ -1,0 +1,54 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+@font-face {
+  font-family: OpenSans;
+  src: url("../font/Opensans.woff") format("woff");
+}
+
+@font-face {
+  font-family: PerfectSans;
+  src: url("../font/PerfectSans.woff") format("woff");
+}
+
+@font-face {
+  font-family: "iconfont"; /* Project id 3683060 */
+  src: url('//at.alicdn.com/t/c/font_3683060_jtnfbbwfjt.woff2?t=1664692496387') format('woff2'),
+  url('//at.alicdn.com/t/c/font_3683060_jtnfbbwfjt.woff?t=1664692496387') format('woff'),
+  url('//at.alicdn.com/t/c/font_3683060_jtnfbbwfjt.ttf?t=1664692496387') format('truetype');
+}
+
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 24px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-close:before {
+  content: "\e61b";
+}
+
+.icon-home:before {
+  content: "\e61c";
+}
+
+.icon-minus:before {
+  content: "\e61d";
+}
+
+.icon-grid:before {
+  content: "\e61e";
+}
+
+.icon-users:before {
+  content: "\e61f";
+}
+
+.icon-cog:before {
+  content: "\e620";
+}
+
