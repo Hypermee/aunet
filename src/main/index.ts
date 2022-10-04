@@ -4,7 +4,13 @@ import { app, shell, ipcMain, Notification, Tray, BrowserWindow } from 'electron
 import { electronApp, optimizer, devTools, is } from '@electron-toolkit/utils'
 
 let win;
+let icon;
 let tray;
+let store;
+
+const Store = require('electron-store');
+Store.initRenderer();
+store = new Store();
 
 function createWindow(): void {
   // Create the browser window.
@@ -24,8 +30,10 @@ function createWindow(): void {
       : {}),
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
-      sandbox: false
-    }
+      contextIsolation: false,
+      nodeIntegration: true,
+      sandbox: false,
+    },
   })
 
   win.on('ready-to-show', () => {
@@ -45,7 +53,16 @@ function createWindow(): void {
     win.loadFile(path.join(__dirname, '../renderer/index.html'))
   }
 
-  tray = new Tray(path.join(__dirname, '../../build/icon.png'))
+  if (is.dev) {
+    // 测试环境
+    icon = path.join(__dirname, '../../build/icon.png')
+  } else {
+    // 正式环境
+    icon = path.join(path.dirname(app.getPath('exe')), '/resources/icon.png')
+  }
+
+
+  tray = new Tray(icon)
 
   tray.setToolTip('AuNet')
 
@@ -55,6 +72,22 @@ function createWindow(): void {
     win.isVisible() ? win.setSkipTaskbar(false) : win.setSkipTaskbar(true);
   });
 
+
+}
+
+// 限制只可以打开一个应用, 4.x的文档
+const gotTheLock = app.requestSingleInstanceLock()
+if (!gotTheLock) {
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    // 当运行第二个实例时,将会聚焦到mainWindow这个窗口
+    if (win) {
+      if (win.isMinimized()) win.restore()
+      win.focus()
+      win.show()
+    }
+  })
 }
 
 // This method will be called when Electron has finished
@@ -82,13 +115,36 @@ app.whenReady().then(() => {
   })
 
 }).then(async () => {
-  let result = await Login("B21150124", "Imacxy27@", 1);
-  new Notification({
-    body: result[1] as string,
-    title: result[0] === 0 ? '连接成功' : '连接失败',
-    icon: path.join(__dirname, '../../build/icon.png')
-  }).show();
+  let user;
+  try {
+    user = JSON.parse(store.get('setup'))?.network?.card || {
+      ISP: '0',
+      account: '',
+      password: ''
+    };
+  } catch {
+    user = {
+      ISP: '0',
+      account: '',
+      password: ''
+    }
+  }
+
+  if(
+    (user.ISP == 0 || user.ISP == 1 || user.ISP == 2) &&
+    (user.account.length > 8 && user.account.length < 12) &&
+    (user.password.length > 7 && user.password.length < 21)
+  ) {
+    let result = await Login(user.account, user.password, user.ISP);
+
+    new Notification({
+      body: result[1] as string,
+      title: result[0] === 0 ? '连接成功' : '连接失败',
+      icon: icon
+    }).show();
+  }
 })
+
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the show quits
@@ -108,4 +164,25 @@ ipcMain.on('close', () => {
 
 ipcMain.on('minimize',() => {
   win.hide()
+})
+
+// 获取可执行文件位置
+const ex = process.execPath;
+
+// 开启 开机自启动
+ipcMain.on('openAutoStart',()=>{
+  app.setLoginItemSettings({
+    openAtLogin: true,
+    path: ex,
+    args: []
+  });
+});
+
+// 关闭 开机自启动
+ipcMain.on('closeAutoStart',()=>{
+  app.setLoginItemSettings({
+    openAtLogin: false,
+    path: ex,
+    args: []
+  });
 })

@@ -108,14 +108,21 @@ export async function Login(account, password, ISP) {
 
   // http连接
   let res;
-  let params = getUrlParams(T);
-  let ISPName = getISPSuffix(ISP);
+
+  let ISPName = getISPSuffix(parseInt(ISP));
+  let args = T.match(/(?<=location.href=")(.*?)(?=")/);
+  let params = getUrlParams(args.length > 0 ? args[0] : "?", ["wlanacip", "wlanuserip", "wlanacname"]);
 
   res = await Core.default_login(account, password, ISPName, params);
 
   if(!res) return [2, '请求连接失败'];
 
-  console.log(res);
+  let errMsg = getUrlParams(res._redirectable.redirectUrl, ['ACLogOut', 'ErrorMsg'])
+
+  if(errMsg['ErrorMsg'] !== "") {
+
+    return [3, '自动连接失败']
+  }
 
   return [0, '自动连接成功'];
 }

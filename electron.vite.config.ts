@@ -1,14 +1,15 @@
 import { resolve } from 'path'
-import { defineConfig } from 'electron-vite'
 import vue from '@vitejs/plugin-vue'
+import { defineConfig } from 'electron-vite'
 
 export default defineConfig({
   main: {
     build: {
       rollupOptions: {
         external: ['@electron-toolkit/utils']
-      }
-    }
+      },
+
+    },
   },
   preload: {
     build: {
@@ -21,8 +22,9 @@ export default defineConfig({
     resolve: {
       alias: {
         '@renderer': resolve('src/renderer/src')
-      }
+      },
+
     },
-    plugins: [vue()]
+    plugins: [vue()],
   }
 })

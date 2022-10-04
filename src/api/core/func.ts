@@ -24,13 +24,9 @@ export const
     }
     return s;
   },
-  getUrlParams = (str) => {
-    let args = str.match(/(?<=location.href=")(.*?)(?=")/);
-    str = args.length > 0 ? args[0] : "?";
-
+  getUrlParams = (str, params: string[]) => {
     let Queen = [];
     let param = str.split("?")[1];
-    let params = ["wlanacip", "wlanuserip", "wlanacname"];
 
     for(let i in params) {
       let reg = new RegExp("(^|&)" + params[i] + "=([^&]*)(&|$)", "i");

@@ -25,8 +25,9 @@ import Aside from './components/leftnav/index.vue';
   font-family: "微软雅黑", serif;
 
   #page {
-    width: 545px;
-    height: 512px;
+    width: 445px;
+    height: 422px;
+    padding: 40px 50px;
   }
 }
 </style>
