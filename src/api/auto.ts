@@ -1,6 +1,7 @@
 import Core from "./core";
 import { execa } from "execa";
-import { getUrlParams, getISPSuffix } from "./core/func";
+import { RadiusErrorAry } from "./core/data";
+import {getUrlParams, getISPSuffix, strAnsi2Unicode, base64decode} from "./core/func";
 
 const _pNjupt = "p.njupt.edu.cn";
 const _pSource = "http://6.6.6.6";
@@ -84,13 +85,7 @@ export async function isOnline() {
       args[2] += Queen[i];
       ret = await execa(cmd, args);
       if(ret.exitCode === 0) {
-        // 等待连接成功
-        await new Promise((resolve) => {
-          setTimeout(() => {
-            resolve(true)
-          }, 500)
-        })
-        return await isConnected();
+        return true;
       }
     } catch { }
   }
@@ -119,9 +114,66 @@ export async function Login(account, password, ISP) {
 
   let errMsg = getUrlParams(res._redirectable.redirectUrl, ['ACLogOut', 'ErrorMsg'])
 
-  if(errMsg['ErrorMsg'] !== "") {
+  if(errMsg['ACLogOut'] == 5) {
+    let msg = '';
+    let error = strAnsi2Unicode(base64decode(errMsg['ErrorMsg']));
 
-    return [3, '自动连接失败']
+    switch (error) {
+      case "1":
+        msg = '账号密码错误';
+        break;
+      case "512":
+        msg = 'AC认证失败';
+        break;
+      case "2":
+        msg = '终端IP已经在线';
+        break;
+      case "3":
+        msg = '系统繁忙，请稍后再试';
+        break;
+      case "4":
+        msg = '发生未知错误，请稍后再试';
+        break;
+      case "5":
+        msg = 'REQ_CHALLENGE失败，请联系AC确认';
+        break;
+      case "6":
+        msg = 'REQ_CHALLENGE超时，请联系AC确认';
+        break;
+      case "7":
+        msg = 'Radius认证失败';
+        break;
+      case "8":
+        msg = 'Radius认证超时';
+        break;
+      case "9":
+        msg = 'Radius下线失败';
+        break;
+      case "10":
+        msg = 'Radius下线超时';
+        break;
+      case "11":
+        msg = '发生其他错误，请稍后再试';
+        break;
+      case "998":
+        msg = 'Portal协议参数不全，请稍后再试';
+        break;
+      default:
+        //匹配错误码则显示对应提示
+        for(let i = 0; i < RadiusErrorAry.length; i++){
+          let option_array = RadiusErrorAry[i].split("|");
+          let regx = option_array[1];
+          if(error.indexOf(regx) != -1){
+            msg = option_array[2];
+            break;
+          }
+        }
+
+        msg = msg == '' ? '自动连接失败' : msg;
+    }
+
+
+    return [3, msg]
   }
 
   return [0, '自动连接成功'];
