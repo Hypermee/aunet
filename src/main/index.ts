@@ -1,5 +1,6 @@
 import * as path from 'path'
-import { Login } from "../api/auto"
+import { Login as networkLogin } from "../api/auto"
+import { Login as helperLogin } from "../api/helper"
 import { app, shell, ipcMain, Notification, Tray, BrowserWindow } from 'electron'
 import { electronApp, optimizer, devTools, is } from '@electron-toolkit/utils'
 
@@ -12,8 +13,8 @@ const Store = require('electron-store');
 Store.initRenderer();
 store = new Store();
 
-async function ipcLogin(account, password, ISP) {
-  let result = await Login(account, password, ISP);
+async function ipcNetworkLogin(account, password, ISP) {
+  let result = await networkLogin(account, password, ISP);
 
   new Notification({
     body: result[1] as string,
@@ -126,28 +127,23 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 
-}).then(async () => {
-  let user;
+
+}).then(() => {
+  let user = {
+    ISP: '0',
+    account: '',
+    password: ''
+  };
   try {
-    user = JSON.parse(store.get('setup'))?.network?.card || {
-      ISP: '0',
-      account: '',
-      password: ''
-    };
-  } catch {
-    user = {
-      ISP: '0',
-      account: '',
-      password: ''
-    }
-  }
+    user = Object.assign({}, user, JSON.parse(store.get('user')));
+  } catch {  }
 
   if(
-    (user.ISP == 0 || user.ISP == 1 || user.ISP == 2) &&
+    (user.ISP == '0' || user.ISP == '1' || user.ISP == '2') &&
     (user.account.length > 8 && user.account.length < 12) &&
     (user.password.length > 7 && user.password.length < 21)
   ) {
-    await ipcLogin(user.account, user.password, user.ISP)
+    ipcNetworkLogin(user.account, user.password, user.ISP).then()
   }
 })
 
@@ -172,12 +168,18 @@ ipcMain.on('minimize',() => {
   win.hide()
 })
 
-// @ts-ignore
-ipcMain.on('connect',async (e, args) => {
+ipcMain.on('connect',(e, args) => {
   const { account = '', password = '', ISP = '' } = args;
-  ipcLogin(account, password, ISP).then((res) => {
+  ipcNetworkLogin(account, password, ISP).then((res) => {
     e.sender.send('renderer-connect', res)
   });
+})
+
+ipcMain.on('username',(e, args) => {
+  const { account = '', password = '' } = args;
+  helperLogin(account, password).then((res) => {
+    e.sender.send('renderer-username', res)
+  })
 })
 
 // 获取可执行文件位置

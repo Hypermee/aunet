@@ -1,24 +1,27 @@
 import { defineStore } from "pinia";
 
-const useSetupStore = defineStore('setup', {
+export const useSetupStore = defineStore('setup', {
   state: () => {
     return {
       basic: {
         auto: {
           start: false
         }
-      },
-      network: {
-        card: {
-          ISP: '0',
-          account: '',
-          password: ''
-        }
       }
     }
   }
 })
 
-export const
-  setupStore: ReturnType<typeof useSetupStore> = useSetupStore();
+export const useUserStore = defineStore('user', {
+  state: () => {
+    return {
+      ISP: '0',
+      account: '',
+      password: '',
+      username: '',
+      JSESSIONID: '',
+    }
+  }
+})
+
 

@@ -2,7 +2,12 @@
   <aside id="left-nav">
     <div class="user">
       <p>你好，</p>
-      <p>B21150124赵宇豪</p>
+      <p
+        class="username"
+        v-if="!userStore.username"
+        @click="onHelperLogin"
+      >{{ isLogin ? '正在登录中...' : '请先点击登录' }}</p>
+      <p v-else>{{ userStore.username }}</p>
     </div>
     <nav class="navs">
       <div
@@ -46,10 +51,13 @@
 
 <script lang="ts" setup>
 import { useRouter } from "vue-router";
-import { ref, defineComponent } from "vue";
+import { useUserStore } from "../../store";
+import { ref, defineComponent, onBeforeMount } from "vue";
 
 const navTo = useRouter();
+const isLogin = ref(false);
 const active = ref<string>("home");
+const userStore: ReturnType<typeof useUserStore> = useUserStore();
 
 const onNavTo = (e) => {
   if(typeof e === 'string') {
@@ -61,7 +69,47 @@ const onNavTo = (e) => {
   }
 }
 
+const onHelperLogin = () => {
+  if(isLogin.value) return;
 
+  isLogin.value = true;
+
+  let { account = '', password = '' } = userStore;
+  window.electron.ipcRenderer.once('renderer-username', function (e, res) {
+    if(res) {
+      userStore.username = res.username;
+      userStore.JSESSIONID = res.JSESSIONID;
+    } else {
+      userStore.username = '';
+      userStore.JSESSIONID = '';
+
+      isLogin.value = false;
+    }
+  })
+
+  window.electron.ipcRenderer.send('username', {
+    account,
+    password
+  })
+}
+
+onBeforeMount(() => {
+  let { account = '', password = '' } = userStore;
+  window.electron.ipcRenderer.once('renderer-username', function (e, res) {
+    if(res) {
+      userStore.username = res.username;
+      userStore.JSESSIONID = res.JSESSIONID
+    } else {
+      userStore.username = '';
+      userStore.JSESSIONID = '';
+    }
+  })
+
+  window.electron.ipcRenderer.send('username', {
+    account,
+    password
+  })
+})
 
 defineComponent({
   name: "left-nav"

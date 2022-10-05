@@ -41,7 +41,7 @@
               id="account"
               name="account"
               type="text"
-              v-model.lazy="setupStore.network.card.account"
+              v-model.lazy="userStore.account"
             />
           </div>
           <div class="item">
@@ -50,14 +50,14 @@
               id="password"
               name="password"
               type="password"
-              v-model.lazy="setupStore.network.card.password"
+              v-model.lazy="userStore.password"
             />
           </div>
           <div class="item">
             <label for="ISP">服务商</label>
             <select
               name="ISP"
-              v-model="setupStore.network.card.ISP"
+              v-model="userStore.ISP"
             >
               <option value="0" selected>校园网</option>
               <option value="1">中国移动</option>
@@ -75,12 +75,14 @@
 </template>
 
 <script lang="ts" setup>
-import { setupStore } from "../../store";
+import { useUserStore, useSetupStore } from "../../store";
 import { defineComponent, ref } from "vue";
 import Message from '../../components/message';
 
 const active = ref('base');
 const btnActive = ref(false);
+const userStore = useUserStore();
+const setupStore = useSetupStore();
 
 const onSwitch = (e) => {
   if(typeof e === 'string') {
@@ -100,8 +102,10 @@ const onChange = (key) => {
 
 const connect = () => {
   if(btnActive.value) return;
-  btnActive.value = true
-  const { account, password, ISP } = setupStore.network.card;
+  btnActive.value = true;
+
+  const { account = '', password = '', ISP = '0' } = userStore;
+
   if(
     (ISP == 0 || ISP == 1 || ISP == 2) &&
     (account.length > 8 && account.length < 12) &&

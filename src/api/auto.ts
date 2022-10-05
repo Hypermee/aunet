@@ -1,7 +1,7 @@
 import Core from "./core";
 import { execa } from "execa";
 import { RadiusErrorAry } from "./core/data";
-import {getUrlParams, getISPSuffix, strAnsi2Unicode, base64decode} from "./core/func";
+import { getUrlParams, getISPSuffix, strAnsi2Unicode, base64decode } from "./core/func";
 
 const _pNjupt = "p.njupt.edu.cn";
 const _pSource = "http://6.6.6.6";
@@ -116,7 +116,11 @@ export async function Login(account, password, ISP) {
 
   if(errMsg['ACLogOut'] == 5) {
     let msg = '';
-    let error = strAnsi2Unicode(base64decode(errMsg['ErrorMsg']));
+    let error = '';
+
+    try {
+      error = strAnsi2Unicode(base64decode(errMsg['ErrorMsg']))
+    } catch { }
 
     switch (error) {
       case "1":

@@ -37,7 +37,7 @@ class Core {
 
 
     try {
-      return await http.post(apiUrl + obj2Param(dataObj), qs.stringify({
+      return await http.post(apiUrl + obj2Param(dataObj), { }, qs.stringify({
         DDDDD,
         upass,
       }))

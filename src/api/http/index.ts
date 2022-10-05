@@ -2,24 +2,31 @@ let http: any = {}
 let { net } = require('electron')
 
 // 发送get
-http.get = async (path, parameter, url) => {
-  url = url || 'https://fundmobapi.eastmoney.com'
-  let json = url + path + parameter
-  return await send(json, null)
+http.get = async (path, options, parameter = null) => {
+  let json = options ? Object.assign({
+    method: 'GET',
+    protocol: 'http:',
+    hostname: 'p.njupt.edu.cn',
+    path: path,
+    port: 801,
+  }, options) : path;
+
+  return await send(json, parameter)
 }
 
 // 发送post
-http.post = async (path, parameter, host) => {
-  let json = {
+http.post = async (path, options, parameter = null) => {
+  let json = options ? Object.assign({
     method: 'POST',
     protocol: 'http:',
-    hostname: host || 'p.njupt.edu.cn',
+    hostname: 'p.njupt.edu.cn',
     path: path,
     port: 801,
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'
     }
-  }
+  }, options) : path;
+
   return await send(json, parameter)
 }
 
@@ -47,10 +54,13 @@ async function send (json, parameter) {
     })
 
     request.on('response', (response) => {
+      result.headers = response.headers;
+      result.statusCode = response.statusCode;
       response.on('data', (chunk) => {
         result.data = chunk.toString()
         resolve(result);
       })
+
     })
 
     request.on('error', (err) => {
