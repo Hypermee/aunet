@@ -12,6 +12,18 @@ const Store = require('electron-store');
 Store.initRenderer();
 store = new Store();
 
+async function ipcLogin(account, password, ISP) {
+  let result = await Login(account, password, ISP);
+
+  new Notification({
+    body: result[1] as string,
+    title: result[0] === 0 ? '连接成功' : '连接失败',
+    icon: icon
+  }).show();
+
+  return result;
+}
+
 function createWindow(): void {
   // Create the browser window.
   win = new BrowserWindow({
@@ -135,13 +147,7 @@ app.whenReady().then(() => {
     (user.account.length > 8 && user.account.length < 12) &&
     (user.password.length > 7 && user.password.length < 21)
   ) {
-    let result = await Login(user.account, user.password, user.ISP);
-
-    new Notification({
-      body: result[1] as string,
-      title: result[0] === 0 ? '连接成功' : '连接失败',
-      icon: icon
-    }).show();
+    await ipcLogin(user.account, user.password, user.ISP)
   }
 })
 
@@ -164,6 +170,14 @@ ipcMain.on('close', () => {
 
 ipcMain.on('minimize',() => {
   win.hide()
+})
+
+// @ts-ignore
+ipcMain.on('connect',async (e, args) => {
+  const { account = '', password = '', ISP = '' } = args;
+  ipcLogin(account, password, ISP).then((res) => {
+    e.sender.send('renderer-connect', res)
+  });
 })
 
 // 获取可执行文件位置

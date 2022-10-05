@@ -108,7 +108,7 @@ export const
     let chrHex = chrCode.toString(16);
     chrHex = "000" + chrHex.toUpperCase();
     chrHex = chrHex.substring(chrHex.length - 4);
-    let i = AnsicodeChr.indexOf(chrHex);
+    let i = AnsicodeChr?.indexOf(chrHex) || -1;
     if (i != -1) {
       chrHex = UnicodeChr.substring(i, 4);
     }

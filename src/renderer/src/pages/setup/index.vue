@@ -64,6 +64,10 @@
               <option value="2">中国电信</option>
             </select>
           </div>
+          <div class="item">
+            <label for="ISP"></label>
+            <button type="primary" @click="connect" :disabled="btnActive">连接测试</button>
+          </div>
         </div>
       </div>
     </div>
@@ -73,8 +77,10 @@
 <script lang="ts" setup>
 import { setupStore } from "../../store";
 import { defineComponent, ref } from "vue";
+import Message from '../../components/message';
 
 const active = ref('base');
+const btnActive = ref(false);
 
 const onSwitch = (e) => {
   if(typeof e === 'string') {
@@ -90,6 +96,32 @@ const onAutoStart = () => {
 
 const onChange = (key) => {
 
+}
+
+const connect = () => {
+  if(btnActive.value) return;
+  btnActive.value = true
+  const { account, password, ISP } = setupStore.network.card;
+  if(
+    (ISP == 0 || ISP == 1 || ISP == 2) &&
+    (account.length > 8 && account.length < 12) &&
+    (password.length > 7 && password.length < 21)
+  ) {
+    window.electron.ipcRenderer.once('renderer-connect', function () {
+      setTimeout(() => {
+        btnActive.value = false;
+      }, 2000)
+    })
+    window.electron.ipcRenderer.send('connect', {
+      ISP,
+      account,
+      password
+    })
+
+  } else {
+    btnActive.value = false;
+    Message({ type: "error", text: "请输入正确的账号密码" });
+  }
 }
 
 defineComponent({
@@ -142,6 +174,10 @@ defineComponent({
             margin: 10px 0;
             display: flex;
             align-items: center;
+
+            button {
+              margin-right: 20px;
+            }
 
             .checkout {
               color: #434343;

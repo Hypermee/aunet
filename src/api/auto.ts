@@ -163,7 +163,7 @@ export async function Login(account, password, ISP) {
         for(let i = 0; i < RadiusErrorAry.length; i++){
           let option_array = RadiusErrorAry[i].split("|");
           let regx = option_array[1];
-          if(error.indexOf(regx) != -1){
+          if(error?.indexOf(regx) != -1){
             msg = option_array[2];
             break;
           }

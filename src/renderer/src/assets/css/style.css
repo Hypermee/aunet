@@ -26,6 +26,43 @@ input[type=checkbox] {
   border: 1px solid #e5e6e7;
 }
 
+button[type=primary] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  cursor: pointer;
+  text-align: center;
+  outline: none;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #ffffff;
+  padding: 3px 15px;
+  border: 1px solid #dcdfe6;
+  background-color: #409eff;
+}
+
+button[type=primary]:hover {
+  color: #ffffff;
+  border-color: #79bbff;
+  background-color: #79bbff;
+}
+
+button[type=primary]:active {
+  color: #ffffff;
+  border-color: #337ecc;
+  background-color: #337ecc;
+}
+
+button[disabled],
+button[disabled]:hover {
+  color: #ffffff;
+  cursor: not-allowed;
+  border-color: #a0cfff;
+  background-color: #a0cfff;
+}
+
+
 select {
   width: 213px;
   height: 30px;
