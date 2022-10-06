@@ -1,14 +1,15 @@
 import qs from 'qs';
 import http from './http';
 
-export const Login = async function Login(account, password) {
+export const Login = async function Login(account, password, JSESSIONID) {
+  if(JSESSIONID !== '') return await refresh(JSESSIONID);
+
   let res;
   let checkcode;
-  let JSESSIONID;
   // 第一步，请求获取JSESSIONID
   res = await http.get('http://10.10.244.240:8080/Self/login/');
 
-  if(res.statusCode !== 200) return false;
+  if(res.statusCode != 200) return false;
 
   try {
     JSESSIONID = res.headers['set-cookie'][0].split(';')[0].split('=')[1];
@@ -30,7 +31,8 @@ export const Login = async function Login(account, password) {
     }
   });
 
-  if(res.statusCode !== 200) return false;
+
+  if(res.statusCode != 200) return false;
 
   // 最终登录
   res = await http.post('http://10.10.244.240:8080/Self/login/verify', {
@@ -46,6 +48,36 @@ export const Login = async function Login(account, password) {
     checkcode
   }));
 
+
+  if(res.statusCode != 200) return false;
+
+
+  let fields: any = (res.data as string).match(/(?<=}\)\()(.*?)(?=\);)/gi);
+
+  if(!fields || fields.length < 1 || fields[0] == '') return false;
+
+  fields = JSON.parse(fields[0]) as object;
+
+  let username = fields!.userName + fields!.userRealName || '';
+
+  return {
+    username,
+    JSESSIONID,
+    userdata: fields
+  }
+
+}
+
+export const refresh = async (JSESSIONID) => {
+  // 刷新会话
+  let res = await http.get('http://10.10.244.240:8080/Self', {
+    hostname: '10.10.244.240',
+    port: 8080,
+    headers: {
+      Cookie: 'JSESSIONID=' + JSESSIONID
+    }
+  });
+
   if(res.statusCode !== 200) return false;
   let fields: any = (res.data as string).match(/(?<=}\)\()(.*?)(?=\);)/gi);
 
@@ -53,13 +85,13 @@ export const Login = async function Login(account, password) {
 
   fields = JSON.parse(fields[0]) as object;
 
-  let username = fields!.userName + fields!.userRealName || '请先登录';
+  let username = fields!.userName + fields!.userRealName || '';
 
   return {
     username,
-    JSESSIONID
+    JSESSIONID,
+    userdata: fields
   }
-
 }
 
 export default Login;

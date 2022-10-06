@@ -52,12 +52,15 @@
 <script lang="ts" setup>
 import { useRouter } from "vue-router";
 import { useUserStore } from "../../store";
-import { ref, defineComponent, onBeforeMount } from "vue";
+import {ref, defineComponent, onBeforeMount, reactive} from "vue";
+
+let t = ref(null);
 
 const navTo = useRouter();
 const isLogin = ref(false);
 const active = ref<string>("home");
-const userStore: ReturnType<typeof useUserStore> = useUserStore();
+const userStore: ReturnType<typeof useUserStore>[1] = useUserStore();
+
 
 const onNavTo = (e) => {
   if(typeof e === 'string') {
@@ -74,12 +77,44 @@ const onHelperLogin = () => {
 
   isLogin.value = true;
 
-  let { account = '', password = '' } = userStore;
+  let { account = '', password = '', JSESSIONID = '' } = userStore;
+
+  if (
+    (account.length < 9 && account.length > 13) &&
+    (password.length < 8 && password.length > 20)
+  ) return;
+
   window.electron.ipcRenderer.once('renderer-username', function (e, res) {
     if(res) {
+      userStore.userdata = res.userdata;
       userStore.username = res.username;
       userStore.JSESSIONID = res.JSESSIONID;
+      if(t.value != null) {
+        clearInterval(t.value);
+        t.value = null;
+      }
+      t = setInterval(() => {
+        window.electron.ipcRenderer.once('renderer-refresh', function (e, res) {
+          if(res) {
+            userStore.userdata = res.userdata;
+            userStore.username = res.username;
+            userStore.JSESSIONID = res.JSESSIONID;
+          } else {
+            userStore.username = '';
+            userStore.JSESSIONID = '';
+            userStore.userdata = { };
+            if(t.value != null) {
+              clearInterval(t.value);
+              t.value = null;
+            }
+          }
+        })
+
+        window.electron.ipcRenderer.once('refresh-account', res.JSESSIONID)
+      }, 1000 * 60 * 20)
     } else {
+      t.value = null;
+      userStore.userdata = { };
       userStore.username = '';
       userStore.JSESSIONID = '';
 
@@ -89,26 +124,75 @@ const onHelperLogin = () => {
 
   window.electron.ipcRenderer.send('username', {
     account,
-    password
+    password,
+    JSESSIONID
   })
 }
 
-onBeforeMount(() => {
-  let { account = '', password = '' } = userStore;
-  window.electron.ipcRenderer.once('renderer-username', function (e, res) {
-    if(res) {
-      userStore.username = res.username;
-      userStore.JSESSIONID = res.JSESSIONID
-    } else {
-      userStore.username = '';
-      userStore.JSESSIONID = '';
-    }
-  })
 
-  window.electron.ipcRenderer.send('username', {
-    account,
-    password
-  })
+onBeforeMount(() => {
+  let { account = '', password = '', JSESSIONID = '' } = userStore;
+
+  if (
+    (account.length < 9 && account.length > 13) &&
+    (password.length < 8 && password.length > 20) &&
+    JSESSIONID != ''
+  ) return;
+
+  if(JSESSIONID != '') {
+    window.electron.ipcRenderer.once('renderer-refresh', function (e, res) {
+      if(res) {
+        userStore.userdata = res.userdata;
+        userStore.username = res.username;
+        userStore.JSESSIONID = res.JSESSIONID;
+      } else {
+        onHelperLogin()
+      }
+    })
+
+    window.electron.ipcRenderer.send('refresh-account', JSESSIONID)
+  } else {
+    window.electron.ipcRenderer.once('renderer-username', function (e, res) {
+      if(res) {
+        userStore.userdata = res.userdata;
+        userStore.username = res.username;
+        userStore.JSESSIONID = res.JSESSIONID;
+        if(t.value != null) {
+          clearInterval(t.value);
+          t.value = null;
+        }
+        t = setInterval(() => {
+          window.electron.ipcRenderer.once('renderer-refresh', function (e, res) {
+            if(res) {
+              userStore.userdata = res.userdata;
+              userStore.username = res.username;
+              userStore.JSESSIONID = res.JSESSIONID;
+            } else {
+              userStore.userdata = { };
+              userStore.username = '';
+              userStore.JSESSIONID = '';
+              if(t.value != null) {
+                clearInterval(t.value);
+                t.value = null;
+              }
+            }
+          })
+
+          window.electron.ipcRenderer.send('refresh-account', res.JSESSIONID)
+        }, 1000 * 60 * 20)
+      } else {
+        t.value = null;
+        userStore.userdata = { };
+        userStore.username = '';
+        userStore.JSESSIONID = '';
+      }
+    })
+    window.electron.ipcRenderer.send('username', {
+      account,
+      password,
+      JSESSIONID
+    })
+  }
 })
 
 defineComponent({

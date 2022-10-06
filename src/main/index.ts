@@ -1,6 +1,6 @@
 import * as path from 'path'
 import { Login as networkLogin } from "../api/auto"
-import { Login as helperLogin } from "../api/helper"
+import { Login as helperLogin, refresh as ipcRefreshAccount } from "../api/helper"
 import { app, shell, ipcMain, Notification, Tray, BrowserWindow } from 'electron'
 import { electronApp, optimizer, devTools, is } from '@electron-toolkit/utils'
 
@@ -176,10 +176,16 @@ ipcMain.on('connect',(e, args) => {
 })
 
 ipcMain.on('username',(e, args) => {
-  const { account = '', password = '' } = args;
-  helperLogin(account, password).then((res) => {
+  const { account = '', password = '', JSESSIONID = '' } = args;
+  helperLogin(account, password, JSESSIONID).then((res) => {
     e.sender.send('renderer-username', res)
   })
+})
+
+ipcMain.on('refresh-account',(e, JSESSIONID) => {
+  ipcRefreshAccount(JSESSIONID).then((res) => {
+    e.sender.send('renderer-refresh', res)
+  });
 })
 
 // 获取可执行文件位置

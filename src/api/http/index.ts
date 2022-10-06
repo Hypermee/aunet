@@ -33,6 +33,7 @@ http.post = async (path, options, parameter = null) => {
 // 发送请求
 async function send (json, parameter) {
   return new Promise((resolve, reject) => {
+    let path = json.path;
     // 请求体
     let request = net.request(json)
 
@@ -41,7 +42,9 @@ async function send (json, parameter) {
       request.write(parameter)
     }
 
-    let result: any = {}
+    let result: any = {
+      data: ''
+    }
 
     // 结果回调
 
@@ -57,7 +60,10 @@ async function send (json, parameter) {
       result.headers = response.headers;
       result.statusCode = response.statusCode;
       response.on('data', (chunk) => {
-        result.data = chunk.toString()
+        result.data += chunk.toString()
+      })
+
+      response.on('end', () => {
         resolve(result);
       })
 

@@ -19,6 +19,7 @@ export const useUserStore = defineStore('user', {
       account: '',
       password: '',
       username: '',
+      userdata: { },
       JSESSIONID: '',
     }
   }

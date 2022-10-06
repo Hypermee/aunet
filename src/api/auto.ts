@@ -47,7 +47,7 @@ export async function isConnected(ip?: string) {
 export async function cmdCurlTo(url?: string) {
   let ret: any = {};
   const cmd = 'curl';
-  const args = ['--connect-timeout', '1', url ? url : _pSource];
+  const args = ['--connect-timeout', '3', url ? url : _pSource];
 
   try {
     ret = await execa(cmd, args);
