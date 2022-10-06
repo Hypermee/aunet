@@ -54,7 +54,7 @@ export const Login = async function Login(account, password, JSESSIONID) {
 
   let fields: any = (res.data as string).match(/(?<=}\)\()(.*?)(?=\);)/gi);
 
-  if(!fields || fields.length < 1 || fields[0] == '') return false;
+  if(!fields || fields.length < 1 || fields[0] == '' || fields[0] == "''") return false;
 
   fields = JSON.parse(fields[0]) as object;
 
@@ -81,7 +81,7 @@ export const refresh = async (JSESSIONID) => {
   if(res.statusCode !== 200) return false;
   let fields: any = (res.data as string).match(/(?<=}\)\()(.*?)(?=\);)/gi);
 
-  if(!fields || fields.length < 1 || fields[0] == '') return false;
+  if(!fields || fields.length < 1 || fields[0] == '' || fields[0] == "''") return false;
 
   fields = JSON.parse(fields[0]) as object;
 
@@ -92,6 +92,46 @@ export const refresh = async (JSESSIONID) => {
     JSESSIONID,
     userdata: fields
   }
+}
+
+export async function getOnlineList(JSESSIONID) {
+  let res = await http.get('http://10.10.244.240:8080/Self/dashboard/getOnlineList', {
+    hostname: '10.10.244.240',
+    port: 8080,
+    headers: {
+      Cookie: 'JSESSIONID=' + JSESSIONID
+    }
+  });
+
+  if(res.statusCode !== 200) return false;
+
+  let list;
+
+  try {
+    list =  JSON.parse(res.data)
+  } catch { }
+
+  return list ? list : false;
+}
+
+export async function logoutOnline(sessionid, JSESSIONID) {
+  let res = await http.get('http://10.10.244.240:8080/Self/dashboard/tooffline?sessionid=' + sessionid, {
+    hostname: '10.10.244.240',
+    port: 8080,
+    headers: {
+      Cookie: 'JSESSIONID=' + JSESSIONID,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if(res.statusCode !== 200) return false;
+
+  try {
+    res = JSON.parse(res.data)
+  } catch { }
+
+
+  return !!res["success"];
 }
 
 export default Login;

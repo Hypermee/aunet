@@ -33,7 +33,6 @@ http.post = async (path, options, parameter = null) => {
 // 发送请求
 async function send (json, parameter) {
   return new Promise((resolve, reject) => {
-    let path = json.path;
     // 请求体
     let request = net.request(json)
 

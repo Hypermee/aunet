@@ -1,6 +1,6 @@
 import * as path from 'path'
 import { Login as networkLogin } from "../api/auto"
-import { Login as helperLogin, refresh as ipcRefreshAccount } from "../api/helper"
+import {getOnlineList, Login as helperLogin, logoutOnline, refresh as ipcRefreshAccount} from "../api/helper"
 import { app, shell, ipcMain, Notification, Tray, BrowserWindow } from 'electron'
 import { electronApp, optimizer, devTools, is } from '@electron-toolkit/utils'
 
@@ -188,6 +188,18 @@ ipcMain.on('refresh-account',(e, JSESSIONID) => {
   });
 })
 
+ipcMain.on('getOnlineList',(e, JSESSIONID) => {
+  getOnlineList(JSESSIONID).then((res) => {
+    e.sender.send('renderer-getOnlineList', res)
+  });
+})
+
+ipcMain.on('online-logout',(e, args) => {
+  const { id = 0, JSESSIONID = '' } = args;
+  logoutOnline(id, JSESSIONID).then((res) => {
+    e.sender.send('renderer-onlineLogout', res)
+  });
+})
 // 获取可执行文件位置
 const ex = process.execPath;
 
