@@ -30,7 +30,7 @@ export const
     return s;
   },
   getUrlParams = (str, params: string[]) => {
-    let Queen = [];
+    let Queen = { };
     let param = str.split("?")[1];
 
     for(let i in params) {

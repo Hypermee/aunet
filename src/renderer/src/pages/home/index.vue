@@ -84,7 +84,6 @@ const logout = (id, index) => {
   });
 
   window.electron.ipcRenderer.once('renderer-onlineLogout', (e, res) => {
-    console.log(res)
     if(res) return onlineList.splice(index, 1);
 
     Message({ type: "error", text: 'IP：' + onlineList[index].ip + " 下线失败" });
@@ -95,6 +94,7 @@ onBeforeMount(() => {
   const { JSESSIONID = '' } = userStore;
 
   window.electron.ipcRenderer.once('renderer-getOnlineList', function (e, res) {
+    console.log(res);
     if(!res) {
       userStore.username = '';
       userStore.JSESSIONID = '';

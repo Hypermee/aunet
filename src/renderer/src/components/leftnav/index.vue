@@ -56,7 +56,7 @@
 <script lang="ts" setup>
 import { useRouter } from "vue-router";
 import { useUserStore } from "../../store";
-import {ref, defineComponent, onBeforeMount, reactive} from "vue";
+import { ref, defineComponent, onBeforeMount } from "vue";
 
 let t = ref(null);
 

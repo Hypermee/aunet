@@ -20,6 +20,7 @@ export const useUserStore = defineStore('user', {
       password: '',
       username: '',
       userdata: { },
+      sharelist: [ ],
       JSESSIONID: '',
     }
   }

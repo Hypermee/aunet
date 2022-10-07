@@ -5,7 +5,10 @@ import { getUrlParams, getISPSuffix, strAnsi2Unicode, base64decode } from "./cor
 
 const _pNjupt = "p.njupt.edu.cn";
 const _pSource = "http://6.6.6.6";
+const Store = require('electron-store');
 const WiFiName = ["NJUPT", "NJUPT-CMCC", "NJUPT-CHINANET"];
+
+let store = new Store();
 
 export async function checkWiFi() {
   let ret;
@@ -107,6 +110,8 @@ export async function Login(account, password, ISP) {
   let ISPName = getISPSuffix(parseInt(ISP));
   let args = T.match(/(?<=location.href=")(.*?)(?=")/);
   let params = getUrlParams(args.length > 0 ? args[0] : "?", ["wlanacip", "wlanuserip", "wlanacname"]);
+
+  store.set('ip', params);
 
   res = await Core.default_login(account, password, ISPName, params);
 
