@@ -99,6 +99,10 @@ select {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.icon-refresh:before {
+  content: "\e621";
+}
+
 .icon-close:before {
   content: "\e61b";
 }

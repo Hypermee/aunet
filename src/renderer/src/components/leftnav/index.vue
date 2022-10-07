@@ -1,10 +1,14 @@
 <template>
   <aside id="left-nav">
     <div class="user">
-      <p>你好，</p>
+      <p>你好，<i
+        v-show="userStore.username"
+        class="iconfont icon-refresh"
+        @click="refreshAccount"
+      /></p>
       <p
         class="username"
-        v-if="!userStore.username"
+        v-if="!userStore.JSESSIONID"
         @click="onHelperLogin"
       >{{ isLogin ? '正在登录中...' : '请先点击登录' }}</p>
       <p v-else>{{ userStore.username }}</p>
@@ -72,6 +76,12 @@ const onNavTo = (e) => {
   }
 }
 
+const refreshAccount = () => {
+  userStore.userdata = { };
+  userStore.JSESSIONID = '';
+  onHelperLogin();
+}
+
 const onHelperLogin = () => {
   if(isLogin.value) return;
 
@@ -80,11 +90,12 @@ const onHelperLogin = () => {
   let { account = '', password = '', JSESSIONID = '' } = userStore;
 
   if (
-    (account.length < 9 && account.length > 13) &&
+    (account.length < 9 && account.length > 11) &&
     (password.length < 8 && password.length > 20)
-  ) return;
+  ) return isLogin.value = false;
 
   window.electron.ipcRenderer.once('renderer-username', function (e, res) {
+    isLogin.value = false;
     if(res) {
       userStore.userdata = res.userdata;
       userStore.username = res.username;
@@ -117,8 +128,6 @@ const onHelperLogin = () => {
       userStore.userdata = { };
       userStore.username = '';
       userStore.JSESSIONID = '';
-
-      isLogin.value = false;
     }
   })
 
