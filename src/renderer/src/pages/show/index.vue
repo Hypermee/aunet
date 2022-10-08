@@ -5,7 +5,7 @@
       <div class="content">
         <input :value="userStore.JSESSIONID" type="text" disabled />
         <button type="primary" @click="copyBtn()">点击复制</button>
-        <button type="primary" @click="refresh()" title="检测授权是否可用"><i class="iconfont icon-refresh" /></button>
+        <button type="primary" @click="refresh()" title="请求远程连接"><i class="iconfont icon-send" /></button>
       </div>
     </div>
     <div class="card share">
@@ -164,7 +164,8 @@ const refresh = () => {
         userStore.userdata = res.userdata;
         userStore.username = res.username;
         userStore.JSESSIONID = res.JSESSIONID;
-        Message({ type: "success", text: "授权码可用" });
+
+        Message({ type: "success", text: "已发送远程连接请求" });
       } else {
         let { account = '', password = '', JSESSIONID = '' } = userStore;
 
@@ -179,13 +180,13 @@ const refresh = () => {
             userStore.username = res.username;
             userStore.JSESSIONID = res.JSESSIONID;
 
-            Message({ type: "success", text: "授权码已更新" });
+            Message({ type: "success", text: "已发送远程连接请求" });
           } else {
             userStore.userdata = { };
             userStore.username = '';
             userStore.JSESSIONID = '';
 
-            Message({ type: "error", text: "授权码更新失败" });
+            Message({ type: "success", text: "远程请求发送失败" });
           }
         })
 
@@ -204,10 +205,12 @@ const refresh = () => {
         userStore.userdata = res.userdata;
         userStore.username = res.username;
         userStore.JSESSIONID = res.JSESSIONID;
+        Message({ type: "success", text: "已发送远程连接请求" });
       } else {
         userStore.userdata = { };
         userStore.username = '';
         userStore.JSESSIONID = '';
+        Message({ type: "success", text: "远程请求发送失败" });
       }
     })
     window.electron.ipcRenderer.send('username', {
@@ -257,7 +260,7 @@ defineComponent({
         text-align: center;
       }
 
-      .icon-refresh {
+      .icon-send {
         font-size: 19px;
       }
 

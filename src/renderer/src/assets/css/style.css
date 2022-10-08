@@ -99,6 +99,10 @@ select {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.icon-send:before {
+  content: "\e622";
+}
+
 .icon-refresh:before {
   content: "\e621";
 }
@@ -126,4 +130,3 @@ select {
 .icon-cog:before {
   content: "\e620";
 }
-

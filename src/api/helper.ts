@@ -3,6 +3,7 @@ import http from './http';
 import Core from "./core";
 import {base64decode, getISPSuffix, getUrlParams, strAnsi2Unicode} from "./core/func";
 import {RadiusErrorAry} from "./core/data";
+import {cmdCurlTo} from "./auto";
 
 const Store = require('electron-store');
 let store = new Store();
@@ -102,7 +103,11 @@ export const Login = async function Login(account, password, JSESSIONID) {
 
   if(!fields || fields.length < 1 || fields[0] == '' || fields[0] == "''") return false;
 
-  fields = JSON.parse(fields[0]) as object;
+  try {
+    fields = JSON.parse(fields[0]) as object;
+  } catch {
+    return false
+  }
 
   let username = fields!.userName + fields!.userRealName || '';
 
@@ -121,6 +126,15 @@ export const Login = async function Login(account, password, JSESSIONID) {
 }
 
 export const refresh = async (JSESSIONID) => {
+  let T = await cmdCurlTo()
+
+  if(T) {
+    let ipArgs = T.match(/(?<=location.href=")(.*?)(?=")/);
+    let params = getUrlParams(ipArgs.length > 0 ? ipArgs[0] : "?", ["wlanacip", "wlanuserip", "wlanacname"]);
+
+    store.set('ip', params);
+  }
+
   // 刷新会话
   let res = await http.get('http://10.10.244.240:8080/Self', {
     hostname: '10.10.244.240',
@@ -136,7 +150,11 @@ export const refresh = async (JSESSIONID) => {
 
   if(!fields || fields.length < 1 || fields[0] == '' || fields[0] == "''") return false;
 
-  fields = JSON.parse(fields[0]) as object;
+  try {
+    fields = JSON.parse(fields[0]) as object;
+  } catch {
+    return false
+  }
 
   let username = fields!.userName + fields!.userRealName || '';
 
@@ -210,7 +228,11 @@ export async function remoteLogin(options) {
 
   if(!fields || fields.length < 1 || fields[0] == '' || fields[0] == "''") return [9, '授权码已失效'];
 
-  fields = JSON.parse(fields[0]) as object;
+  try {
+    fields = JSON.parse(fields[0]) as object;
+  } catch {
+    return false
+  }
 
   let checkCode = fields.userExtar.checkCode;
   let username = fields!.userName + fields!.userRealName || '';
@@ -225,10 +247,9 @@ export async function remoteLogin(options) {
 
   let ip = ipArgs[1] || '';
 
-  // 清除checkCode
+  // checkCode
   let args = (res.data as string).match(/(?<=csrftoken: ')(.*?)(?=',)/gi)
   let csrftoken = (!args || args.length < 1 || args[0] == '' || args[0] == "''") ? '' : args[0];
-  setCheckCode(csrftoken, JSESSIONID, true);
 
   // 没有请求上线的IP
   if(
@@ -243,7 +264,7 @@ export async function remoteLogin(options) {
         && ipArgs[0] == '' && ipArgs[2] == ''
     ) {
       let ip = store.get('ip');
-      ipArgs[0] = ip?.wlanacip || null;
+      ipArgs[0] = null;
       ipArgs[2] = ip?.wlanacname || null;
 
     } else return [1, '没有远程上线请求', { ip, username }];
@@ -257,7 +278,10 @@ export async function remoteLogin(options) {
     isLogin = (JSON.parse(res.data.slice(2, res.data.length - 1))["result"]) == 'ok';
   } catch { }
 
-  if(isLogin) return [0, '该用户已联网', { ip, username }];
+  if(isLogin) {
+    setCheckCode(csrftoken, JSESSIONID, true);
+    return [0, '该用户已联网', { ip, username }];
+  }
 
   if(res.statusCode !== 200) return [false, null, { ip, username }];
 
@@ -335,8 +359,9 @@ export async function remoteLogin(options) {
     return [3, msg, { ip, username }]
   }
 
+  // 清除远程连接请求
+  setCheckCode(csrftoken, JSESSIONID, true);
   return [0, '远程上线成功', { ip, username }]
-
 }
 
 export default Login;
