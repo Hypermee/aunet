@@ -32,7 +32,7 @@ const setCheckCode = (csrftoken, JSESSIONID, confirm?: boolean) => {
   // // @ts-ignore
   // let checkCode = ipNum.toString(36);
   const ip = store.get('ip');
-  let checkCode = confirm ? '' : ip.wlanacip + '|' + ip.wlanuserip + '|' + ip.wlanacname || '||';
+  let checkCode = confirm ? '' : (ip?.wlanacip || '') + '|' + (ip?.wlanuserip || '') + '|' + (ip?.wlanacname || '');
 
   http.post('http://10.10.244.240:8080/Self/setting/updateUserSecurity', {
     hostname: '10.10.244.240',
@@ -109,6 +109,7 @@ export const Login = async function Login(account, password, JSESSIONID) {
 
   let args = (res.data as string).match(/(?<=csrftoken: ')(.*?)(?=',)/gi)
   let csrftoken = (!args || args.length < 1 || args[0] == '' || fields[0] == "''") ? '' : args[0];
+
   setCheckCode(csrftoken, JSESSIONID)
 
   return {
@@ -142,6 +143,7 @@ export const refresh = async (JSESSIONID) => {
 
   let args = (res.data as string).match(/(?<=csrftoken: ')(.*?)(?=',)/gi);
   let csrftoken = (!args || args.length < 1 || args[0] == '' || fields[0] == "''") ? '' : args[0];
+
   setCheckCode(csrftoken, JSESSIONID);
 
   return {
@@ -202,7 +204,6 @@ export async function remoteLogin(options) {
     }
   });
 
-  console.log(1)
   if(res.statusCode !== 200) return false;
 
   let fields: any = (res.data as string).match(/(?<=}\)\()(.*?)(?=\);)/gi);
@@ -222,6 +223,8 @@ export async function remoteLogin(options) {
     return [8, '没有远程上线请求', { ip: '', username }];
   }
 
+  let ip = ipArgs[1] || '';
+
   // 清除checkCode
   let args = (res.data as string).match(/(?<=csrftoken: ')(.*?)(?=',)/gi)
   let csrftoken = (!args || args.length < 1 || args[0] == '' || args[0] == "''") ? '' : args[0];
@@ -232,8 +235,19 @@ export async function remoteLogin(options) {
     ipArgs.length !== 3 ||
     !/^(1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|[0-9])\.((1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|\d)\.){2}(1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|\d)$/.test(ipArgs[0]) ||
     !/^(1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|[0-9])\.((1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|\d)\.){2}(1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|\d)$/.test(ipArgs[1]) ||
-    ipArgs[2].length < 3
-  ) return [1, '没有上线请求', { ip: ipArgs[1], username }];
+    ipArgs[2] == ''
+  ) {
+
+    if(
+        /^(1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|[0-9])\.((1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|\d)\.){2}(1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|\d)$/.test(ipArgs[1])
+        && ipArgs[0] == '' && ipArgs[2] == ''
+    ) {
+      let ip = store.get('ip');
+      ipArgs[0] = ip?.wlanacip || null;
+      ipArgs[2] = ip?.wlanacname || null;
+
+    } else return [1, '没有远程上线请求', { ip, username }];
+  }
 
   res = await http.get('http://p.njupt.edu.cn:801/eportal/?c=ACSetting&a=checkScanIP&wlanuserip=' + ipArgs[1]);
 
@@ -243,15 +257,15 @@ export async function remoteLogin(options) {
     isLogin = (JSON.parse(res.data.slice(2, res.data.length - 1))["result"]) == 'ok';
   } catch { }
 
-  if(isLogin) return [0, '该用户已联网', { ip: ipArgs[1], username }];
+  if(isLogin) return [0, '该用户已联网', { ip, username }];
 
-  if(res.statusCode !== 200) return [false, null, { ip: ipArgs[1], username }];
+  if(res.statusCode !== 200) return [false, null, { ip, username }];
 
   let ISPName = getISPSuffix(parseInt(ISP));
-  let params = { wlanacip: ipArgs[0], wlanuserip: ipArgs[1], wlanacname: ipArgs[2] };
+  let params = { wlanacip: ipArgs[0] || null, wlanuserip: ipArgs[1] || null, wlanacname: ipArgs[2] || null };
   res = await Core.default_login(account, password, ISPName, params);
 
-  if(!res) return [2, '请求连接失败', { ip: ipArgs[1], username }];
+  if(!res) return [2, '请求连接失败', { ip, username }];
 
   let errMsg = getUrlParams(res._redirectable.redirectUrl, ['ACLogOut', 'ErrorMsg'])
 
@@ -318,10 +332,10 @@ export async function remoteLogin(options) {
     }
 
 
-    return [3, msg, { ip: ipArgs[1], username }]
+    return [3, msg, { ip, username }]
   }
 
-  return [0, '远程上线成功', { ip: ipArgs[1], username }]
+  return [0, '远程上线成功', { ip, username }]
 
 }
 

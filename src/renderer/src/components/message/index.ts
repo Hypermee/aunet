@@ -15,7 +15,6 @@ document.body.appendChild(div)
 let timer: any = null
 
 export default ({ type, text }) => {
-  console.log(1)
   // 实现：根据MessageMain.vue渲染消息提示
   // 1. 导入组件
   // 2. 根据组件创建虚拟节点   第一个参数为要创建的虚拟节点  第二个参数为props的参数

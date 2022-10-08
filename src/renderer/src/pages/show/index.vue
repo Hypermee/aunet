@@ -124,8 +124,8 @@ const remote = (index) => {
     if(res && res[2]) {
       const { ip = '', username = '' } = res[2];
 
-      userStore.sharelist[index].ip = ip;
-      userStore.sharelist[index].username = username;
+      ip && (userStore.sharelist[index].ip = ip);
+      username && (userStore.sharelist[index].username = username);
     }
 
     if(!res || res[0] === false) return Message({ type: 'error', text: '本地请求失败' });

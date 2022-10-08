@@ -2,6 +2,7 @@ import Core from "./core";
 import { execa } from "execa";
 import { RadiusErrorAry } from "./core/data";
 import { getUrlParams, getISPSuffix, strAnsi2Unicode, base64decode } from "./core/func";
+import http from "./http";
 
 const _pNjupt = "p.njupt.edu.cn";
 const _pSource = "http://6.6.6.6";
@@ -102,7 +103,23 @@ export async function Login(account, password, ISP) {
 
 
   let T = await cmdCurlTo();
-  if(!T) return [0, '已连接校园网'];
+  if(!T) {
+    let ret = await http.get("http://p.njupt.edu.cn/");
+
+    if(ret.statusCode == 200) {
+      ret = ret.data.match(/(?<=v46ip=')(.*?)(?=')/gi);
+
+      if(ret && ret.length > 0 && ret[0]) {
+        store.set('ip', {
+          wlanacip: null,
+          wlanacname: null,
+          wlanuserip: ret[0].toString()
+        })
+      }
+    }
+
+    return [0, '已连接校园网'];
+  }
 
   // http连接
   let res;

@@ -94,7 +94,6 @@ onBeforeMount(() => {
   const { JSESSIONID = '' } = userStore;
 
   window.electron.ipcRenderer.once('renderer-getOnlineList', function (e, res) {
-    console.log(res);
     if(!res) {
       userStore.username = '';
       userStore.JSESSIONID = '';
