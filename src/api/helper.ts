@@ -126,13 +126,31 @@ export const Login = async function Login(account, password, JSESSIONID) {
 }
 
 export const refresh = async (JSESSIONID) => {
-  let T = await cmdCurlTo()
+  let ip = store.get('ip')
 
-  if(T) {
-    let ipArgs = T.match(/(?<=location.href=")(.*?)(?=")/);
-    let params = getUrlParams(ipArgs.length > 0 ? ipArgs[0] : "?", ["wlanacip", "wlanuserip", "wlanacname"]);
+  if(!ip.wlanuserip) {
+    let T = await cmdCurlTo()
 
-    store.set('ip', params);
+    if(T) {
+      let ipArgs = T.match(/(?<=location.href=")(.*?)(?=")/);
+      let params = getUrlParams(ipArgs.length > 0 ? ipArgs[0] : "?", ["wlanacip", "wlanuserip", "wlanacname"]);
+
+      store.set('ip', params);
+    } else {
+      let ret = await http.get("http://p.njupt.edu.cn/");
+
+      if(ret.statusCode == 200) {
+        ret = ret.data.match(/(?<=v46ip=')(.*?)(?=')/gi);
+
+        if(ret && ret.length > 0 && ret[0]) {
+          store.set('ip', {
+            wlanacip: null,
+            wlanacname: null,
+            wlanuserip: ret[0].toString()
+          })
+        }
+      }
+    }
   }
 
   // 刷新会话
